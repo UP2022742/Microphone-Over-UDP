@@ -13,7 +13,7 @@ def udpStream():
 
     udp.close()
 
-def record(stream, CHUNK):    
+def record(stream, CHUNK):
     while True:
         frames.append(stream.read(CHUNK))
 
@@ -39,8 +39,8 @@ class SendData:
         Tr = Thread(target = record, args = (self.stream, self.CHUNK,))
         Ts = Thread(target = udpStream)
         
-        Tr.setDaemon(True)
-        Ts.setDaemon(True)
+        Tr.daemon = True
+        Ts.daemon = True
         
         Tr.start()
         Ts.start()
