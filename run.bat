@@ -1,3 +1,3 @@
 @echo off
-start "" server.py
-start "" client.py
+start "" server/server.py
+start "" client/client.py
