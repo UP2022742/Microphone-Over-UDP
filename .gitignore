@@ -1,2 +1,4 @@
 client/config.yml
+
 server/config.yml
+server/clients.lst

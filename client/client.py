@@ -5,19 +5,25 @@ import yaml
 
 frames = []
 
-def udpStream(ip_address, port):
-    udp = socket(AF_INET, SOCK_DGRAM)    
-    print("Sending to socket...")
-    while True:
-        if len(frames) > 0:
-            udp.sendto(frames.pop(0), (ip_address, port))
+class ConnectStream:
+    def __init__(self, ip_address, port) -> None:
+        self.socket = socket(AF_INET, SOCK_DGRAM)
+        self._running = True
 
-    udp.close()
+        self.ip_address = ip_address
+        self.port = port
 
-def record(stream, CHUNK):
-    print("Appending stream to frames...")
-    while True:
-        frames.append(stream.read(CHUNK))
+    def stop(self):
+        self._running = False
+
+    def start(self):
+        print("Sending socket data...")
+        while self._running:
+            if len(frames) > 0:
+                self.socket.sendto(frames.pop(0), (self.ip_address, self.port))
+
+        print("Closing socket...")
+        self.socket.close()
 
 class SendData:
     def __init__(self, ip_address: str, port: int) -> None:
@@ -38,6 +44,9 @@ class SendData:
             input = True,
             frames_per_buffer = self.CHUNK,
         )
+
+        self.connect_stream = ConnectStream(ip_address, port)
+        self.Tr = Thread(target = self.connect_stream.start, args = ())
         
     def main(self):
         
@@ -45,19 +54,16 @@ class SendData:
             print("Make sure that the IP and Port are defined")
             return
 
-        print("Starting threads...")
+        try:
+            print("Appending stream to frames...")
+            self.Tr.start()
+            while self.Tr.is_alive():
+                frames.append(self.stream.read(self.CHUNK))
 
-        Tr = Thread(target = record, args = (self.stream, self.CHUNK,))
-        Ts = Thread(target = udpStream, args=(self.ip_address, self.port,))
-        
-        Tr.daemon = True
-        Ts.daemon = True
-        
-        Tr.start()
-        Ts.start()
-        
-        Tr.join()
-        Ts.join()
+        except KeyboardInterrupt:
+            self.connect_stream.stop()
+            self.Tr.join()
+        return 0
 
 if __name__ == "__main__":
     ip_address = None
